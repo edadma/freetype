@@ -1,4 +1,4 @@
-name := "-sn-template"
+name := "freetype"
 
 version := "0.0.1"
 
