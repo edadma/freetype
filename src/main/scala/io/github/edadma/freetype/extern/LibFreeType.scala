@@ -8,13 +8,23 @@ object LibFreeType:
   type FT_Library = Ptr[Byte]
   type FT_Error = CInt
   type FT_Long = CLong
-  type FT_Face = Ptr[CStruct0]
+  type FT_Face = Ptr[CStruct0] // field `glyph` is at offset 152
   type FT_UInt = CUnsignedInt
   type FT_ULong = CUnsignedLong
   type FT_Int32 = CInt
   type FT_UInt32 = CUnsignedInt
   type FT_GlyphSlot = Ptr[CStruct0]
   type FT_Render_Mode = CInt
+  type FT_Bitmap = CStruct8[
+    /* rows */ CUnsignedInt,
+    /* width */ CUnsignedInt,
+    /* pitch */ CInt,
+    /* buffer */ Ptr[CUnsignedChar],
+    /* num_grays */ CUnsignedShort,
+    /* pixel_mode */ CUnsignedChar,
+    /* palette_mode */ CUnsignedChar,
+    /* palette */ Ptr[Byte],
+  ]
 
   def FT_Init_FreeType(alibrary: FT_Library): FT_Error = extern
   def FT_Done_FreeType(alibrary: FT_Library): FT_Error = extern
