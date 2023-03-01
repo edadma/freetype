@@ -24,15 +24,23 @@ implicit class Library(val libraryptr: FT_Library) extends AnyVal:
 private val FACE_GLYPH = 152
 private val FACE_GLYPH_BITMAP = 152
 
+enum RenderMode:
+  case NORMAL, LIGHT, MONO, LCD, LCD_V, SDF, MAX
+
 implicit class Face(val faceptr: FT_Face) extends AnyVal:
   def doneFace: Int = FT_Done_Face(faceptr)
   def setPixelSizes(pixel_width: Int, pixel_height: Int): Int =
     FT_Set_Pixel_Sizes(faceptr, pixel_width.toUInt, pixel_height.toUInt)
   def loadChar(char_code: Long, load_flags: Int): Int = FT_Load_Char(faceptr, char_code.toULong, load_flags)
-  def renderGlyph(render_mode: Int): FT_Error =
-    FT_Render_Glyph(!(faceptr + FACE_GLYPH).asInstanceOf[Ptr[FT_GlyphSlot]], render_mode)
-  def bitmap(idx: Int): Bitmap =
-    (!(faceptr + FACE_GLYPH).asInstanceOf[Ptr[FT_GlyphSlot]] + FACE_GLYPH_BITMAP).asInstanceOf[Ptr[FT_Bitmap]]
+  def renderGlyph(render_mode: RenderMode): FT_Error =
+    FT_Render_Glyph(
+      !(faceptr.asInstanceOf[Ptr[Byte]] + FACE_GLYPH).asInstanceOf[Ptr[FT_GlyphSlot]],
+      render_mode.ordinal,
+    )
+  def bitmap: Bitmap =
+    ((!(faceptr.asInstanceOf[Ptr[Byte]] + FACE_GLYPH).asInstanceOf[Ptr[FT_GlyphSlot]])
+      .asInstanceOf[Ptr[Byte]] + FACE_GLYPH_BITMAP)
+      .asInstanceOf[Ptr[FT_Bitmap]]
 
 implicit class Bitmap(val bitmapptr: Ptr[FT_Bitmap]) extends AnyVal:
   def rows: Int = bitmapptr._1.toInt
