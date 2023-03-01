@@ -26,7 +26,7 @@ object LibFreeType:
     /* palette */ Ptr[Byte],
   ]
 
-  def FT_Init_FreeType(alibrary: FT_Library): FT_Error = extern
+  def FT_Init_FreeType(alibrary: Ptr[FT_Library]): FT_Error = extern
   def FT_Done_FreeType(alibrary: FT_Library): FT_Error = extern
   def FT_New_Face(library: FT_Library, filepathname: CString, face_index: FT_Long, aface: Ptr[FT_Face]): FT_Error =
     extern

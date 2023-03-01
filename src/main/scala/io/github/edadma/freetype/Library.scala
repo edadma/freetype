@@ -5,6 +5,13 @@ import scala.scalanative.unsigned._
 
 import io.github.edadma.freetype.extern.LibFreeType.*
 
+def initFreeType: Either[Int, Library] =
+  val alibrary = stackalloc[FT_Library]()
+
+  FT_Init_FreeType(alibrary) match
+    case 0   => Right(!alibrary)
+    case err => Left(err)
+
 implicit class Library(val libraryptr: FT_Library) extends AnyVal:
   def doneFreeType: Int = FT_Done_FreeType(libraryptr)
   def newFace(filepathname: String, face_index: Long): Either[Int, Face] =
