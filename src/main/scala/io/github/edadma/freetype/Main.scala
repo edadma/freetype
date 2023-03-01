@@ -11,6 +11,13 @@ package io.github.edadma.freetype
     if face.renderGlyph(RenderMode.NORMAL) != 0 then sys.error("error rendering glyph")
 
     println(ch)
-    println(face.bitmap.rows)
-    println(face.bitmap.width)
-    println(face.bitmap.pitch)
+
+    val pitch = face.bitmap.pitch
+
+    for i <- 0 until face.bitmap.rows do
+      for j <- 0 until face.bitmap.width do print(f"${face.bitmap.buffer(i * pitch + j)}%3d ")
+
+      println
+    end for
+
+    println
