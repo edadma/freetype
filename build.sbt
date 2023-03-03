@@ -1,6 +1,6 @@
 name := "freetype"
 
-version := "0.0.1"
+version := "0.0.2"
 
 versionScheme := Some("early-semver")
 
@@ -37,10 +37,7 @@ licenses := Seq("ISC" -> url("https://opensource.org/licenses/ISC"))
 
 homepage := Some(url("https://github.com/edadma/" + name.value))
 
-//libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.13" % "test"
-
-//libraryDependencies ++= Seq(
-//)
+libraryDependencies += "io.github.edadma" %%% "freetype_face" % "0.0.1"
 
 publishMavenStyle := true
 

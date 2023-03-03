@@ -2,13 +2,14 @@ package io.github.edadma.freetype.extern
 
 import scala.scalanative.unsafe._
 
+import io.github.edadma.freetype_face.FT_Face
+
 @link("freetype")
 @extern
 object LibFreeType:
   type FT_Library = Ptr[Byte]
   type FT_Error = CInt
   type FT_Long = CLong
-  type FT_Face = Ptr[CStruct0] // field `glyph` is at offset 152
   type FT_UInt = CUnsignedInt
   type FT_ULong = CUnsignedLong
   type FT_Int32 = CInt

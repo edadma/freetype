@@ -4,6 +4,7 @@ import scala.scalanative.unsafe._
 import scala.scalanative.unsigned._
 
 import io.github.edadma.freetype.extern.LibFreeType.*
+import io.github.edadma.freetype_face.FT_Face
 
 def initFreeType: Either[Int, Library] =
   val alibrary = stackalloc[FT_Library]()
