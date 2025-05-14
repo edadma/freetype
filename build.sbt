@@ -4,7 +4,7 @@ version := "0.0.4"
 
 versionScheme := Some("early-semver")
 
-scalaVersion := "3.5.0"
+scalaVersion := "3.7.0"
 
 enablePlugins(ScalaNativePlugin)
 
@@ -18,10 +18,6 @@ scalacOptions ++= Seq(
 )
 
 organization := "io.github.edadma"
-
-githubOwner := "edadma"
-
-githubRepository := name.value
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
