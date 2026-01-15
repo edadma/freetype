@@ -16,6 +16,8 @@ object LibFreeType:
   type FT_UInt32 = CUnsignedInt
   type FT_GlyphSlot = Ptr[CStruct0]
   type FT_Render_Mode = CInt
+  type FT_Pos = CLong
+  type FT_Vector = CStruct2[FT_Pos, FT_Pos]
   type FT_Bitmap = CStruct8[
     /* rows */ CUnsignedInt,
     /* width */ CUnsignedInt,
@@ -36,3 +38,5 @@ object LibFreeType:
   def FT_Set_Pixel_Sizes(face: FT_Face, pixel_width: FT_UInt, pixel_height: FT_UInt): FT_Error = extern
   def FT_Load_Char(face: FT_Face, char_code: FT_ULong, load_flags: FT_Int32): FT_Error = extern
   def FT_Render_Glyph(slot: FT_GlyphSlot, render_mode: FT_Render_Mode): FT_Error = extern
+  def FT_Get_Char_Index(face: FT_Face, charcode: FT_ULong): FT_UInt = extern
+  def FT_Get_Kerning(face: FT_Face, left_glyph: FT_UInt, right_glyph: FT_UInt, kern_mode: FT_UInt, akerning: Ptr[FT_Vector]): FT_Error = extern

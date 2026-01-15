@@ -28,6 +28,9 @@ private val FACE_GLYPH_BITMAP = 152
 enum RenderMode:
   case NORMAL, LIGHT, MONO, LCD, LCD_V, SDF, MAX
 
+enum KerningMode:
+  case DEFAULT, UNFITTED, UNSCALED
+
 implicit class Face(val faceptr: FT_Face) extends AnyVal:
   def doneFace: Int = FT_Done_Face(faceptr)
   def setPixelSizes(pixel_width: Int, pixel_height: Int): Int =
@@ -43,6 +46,15 @@ implicit class Face(val faceptr: FT_Face) extends AnyVal:
     ((!(faceptr.asInstanceOf[Ptr[Byte]] + FACE_GLYPH).asInstanceOf[Ptr[FT_GlyphSlot]])
       .asInstanceOf[Ptr[Byte]] + FACE_GLYPH_BITMAP)
       .asInstanceOf[Ptr[FT_Bitmap]]
+  def getCharIndex(charcode: Long): Int =
+    FT_Get_Char_Index(faceptr, charcode.toULong.asInstanceOf[FT_ULong]).toInt
+  def getKerning(leftChar: Char, rightChar: Char, mode: KerningMode = KerningMode.DEFAULT): Double =
+    val leftIdx = FT_Get_Char_Index(faceptr, leftChar.toLong.toULong.asInstanceOf[FT_ULong])
+    val rightIdx = FT_Get_Char_Index(faceptr, rightChar.toLong.toULong.asInstanceOf[FT_ULong])
+    val vec = stackalloc[FT_Vector]()
+    FT_Get_Kerning(faceptr, leftIdx, rightIdx, mode.ordinal.toUInt, vec)
+    val x = vec._1.toLong.toDouble
+    if mode == KerningMode.UNSCALED then x else x / 64.0 // 26.6 fixed-point for scaled modes
 
 implicit class Bitmap(val bitmapptr: Ptr[FT_Bitmap]) extends AnyVal:
   def rows: Int = bitmapptr._1.toInt
