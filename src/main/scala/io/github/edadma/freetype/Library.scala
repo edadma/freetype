@@ -47,14 +47,18 @@ implicit class Face(val faceptr: FT_Face) extends AnyVal:
       .asInstanceOf[Ptr[Byte]] + FACE_GLYPH_BITMAP)
       .asInstanceOf[Ptr[FT_Bitmap]]
   def getCharIndex(charcode: Long): Int =
-    FT_Get_Char_Index(faceptr, charcode.toULong.asInstanceOf[FT_ULong]).toInt
+    FT_Get_Char_Index(faceptr, charcode.toUSize.asInstanceOf[FT_ULong]).toInt
   def getKerning(leftChar: Char, rightChar: Char, mode: KerningMode = KerningMode.DEFAULT): Double =
-    val leftIdx = FT_Get_Char_Index(faceptr, leftChar.toLong.toULong.asInstanceOf[FT_ULong])
-    val rightIdx = FT_Get_Char_Index(faceptr, rightChar.toLong.toULong.asInstanceOf[FT_ULong])
+    val leftIdx = FT_Get_Char_Index(faceptr, leftChar.toLong.toUSize.asInstanceOf[FT_ULong])
+    val rightIdx = FT_Get_Char_Index(faceptr, rightChar.toLong.toUSize.asInstanceOf[FT_ULong])
     val vec = stackalloc[FT_Vector]()
-    FT_Get_Kerning(faceptr, leftIdx, rightIdx, mode.ordinal.toUInt, vec)
-    val x = vec._1.toLong.toDouble
-    if mode == KerningMode.UNSCALED then x else x / 64.0 // 26.6 fixed-point for scaled modes
+    val err = FT_Get_Kerning(faceptr, leftIdx, rightIdx, mode.ordinal.toUInt, vec)
+    if err != 0 then
+      println(s"FT_Get_Kerning error: $err (${errorString(err)})")
+      0.0
+    else
+      val x = vec._1.toLong.toDouble
+      if mode == KerningMode.UNSCALED then x else x / 64.0 // 26.6 fixed-point for scaled modes
 
 implicit class Bitmap(val bitmapptr: Ptr[FT_Bitmap]) extends AnyVal:
   def rows: Int = bitmapptr._1.toInt

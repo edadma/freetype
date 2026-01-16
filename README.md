@@ -9,7 +9,7 @@ Installation
 Add the dependency to your `build.sbt`:
 
 ```scala
-libraryDependencies += "io.github.edadma" %%% "freetype" % "0.0.2"
+libraryDependencies += "io.github.edadma" %%% "freetype" % "0.0.3"
 ```
 
 You also need FreeType installed on your system:
