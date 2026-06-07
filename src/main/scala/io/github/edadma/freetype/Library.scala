@@ -13,8 +13,16 @@ def initFreeType: Either[Int, Library] =
     case 0   => Right(!alibrary)
     case err => Left(err)
 
+// 16.16 fixed-point conversions for the variation API's design coordinates and axis ranges.
+private def fixedToDouble(f: FT_Fixed): Double = f.toLong.toDouble / 65536.0
+private def doubleToFixed(d: Double): FT_Fixed = math.round(d * 65536.0).asInstanceOf[FT_Fixed]
+
 implicit class Library(val libraryptr: FT_Library) extends AnyVal:
   def doneFreeType: Int = FT_Done_FreeType(libraryptr)
+
+  /** Release the variation descriptor obtained from [[Face.getMMVar]]. It is owned by the
+    * library, so it is freed here rather than through the face. */
+  def doneMMVar(mmvar: MMVar): Int = FT_Done_MM_Var(libraryptr, mmvar.ptr)
   def newFace(filepathname: String, face_index: Long): Either[Int, Face] =
     val aface = stackalloc[FT_Face]()
 
@@ -78,10 +86,65 @@ implicit class Face(val faceptr: FT_Face) extends AnyVal:
       val x = vec._1.toLong.toDouble
       if mode == KerningMode.UNSCALED then x else x / 64.0 // 26.6 fixed-point for scaled modes
 
+  /** The face's variation descriptor — its axes (weight, width, slant, …) and named instances —
+    * for a variable (OpenType `fvar`) font, or `Left(error)` for a static font. The returned
+    * [[MMVar]] is owned by the library; pass it to [[Library.doneMMVar]] when finished. Read an
+    * axis's tag and range from it to know how to drive [[setVarDesignCoordinates]]. */
+  def getMMVar: Either[FT_Error, MMVar] =
+    val amaster = stackalloc[Ptr[FT_MM_Var]]()
+    FT_Get_MM_Var(faceptr, amaster) match
+      case 0   => Right(MMVar(!amaster))
+      case err => Left(err)
+
+  /** Set the face's variation design coordinates — one value per axis, in the axis's own design
+    * units (e.g. `400` on a `wght` axis), in the order the axes appear in [[getMMVar]]. This
+    * reshapes the outlines the next time a glyph is loaded, which is how a single variable font
+    * renders any weight or width. Returns 0 on success. */
+  def setVarDesignCoordinates(coords: Seq[Double]): FT_Error =
+    val n   = coords.length
+    val arr = stackalloc[FT_Fixed](n.toUInt)
+    var i   = 0
+    while i < n do
+      arr(i) = doubleToFixed(coords(i))
+      i += 1
+    FT_Set_Var_Design_Coordinates(faceptr, n.toUInt, arr)
+
+  /** Read back the current design coordinates for the face's first `numAxes` axes. */
+  def getVarDesignCoordinates(numAxes: Int): Either[FT_Error, Vector[Double]] =
+    val arr = stackalloc[FT_Fixed](numAxes.toUInt)
+    FT_Get_Var_Design_Coordinates(faceptr, numAxes.toUInt, arr) match
+      case 0   => Right((0 until numAxes).map(i => fixedToDouble(arr(i))).toVector)
+      case err => Left(err)
+
+  /** Select one of the font's predefined named instances (e.g. "Bold", "Condensed") by index,
+    * a shortcut for setting that instance's coordinates. Index 0 resets to the default. */
+  def setNamedInstance(index: Int): FT_Error = FT_Set_Named_Instance(faceptr, index.toUInt)
+
 implicit class Bitmap(val bitmapptr: Ptr[FT_Bitmap]) extends AnyVal:
   def rows: Int = bitmapptr._1.toInt
   def width: Int = bitmapptr._2.toInt
   def pitch: Int = bitmapptr._3
   def buffer(idx: Int): Int = (!(bitmapptr._4 + idx)).toInt & 0xff
+
+// The variation descriptor of a variable font (from [[Face.getMMVar]]): how many axes it has
+// and access to each. Free it with [[Library.doneMMVar]] when done.
+class MMVar(val ptr: Ptr[FT_MM_Var]) extends AnyVal:
+  def numAxis: Int        = ptr._1.toInt
+  def numDesigns: Int     = ptr._2.toInt
+  def numNamedStyles: Int = ptr._3.toInt
+  def axis(i: Int): VarAxis = VarAxis(ptr._4 + i)
+
+// One variation axis: its name, its design-value range, and its OpenType tag (the four-letter
+// id like "wght" or "wdth" used to recognise it).
+class VarAxis(val ptr: Ptr[FT_Var_Axis]) extends AnyVal:
+  def name: String     = fromCString(ptr._1)
+  def minimum: Double  = fixedToDouble(ptr._2)
+  def default: Double  = fixedToDouble(ptr._3)
+  def maximum: Double  = fixedToDouble(ptr._4)
+  def tag: Long        = ptr._5.toLong
+  /** The axis tag decoded to its four-character string, e.g. "wght". */
+  def tagString: String =
+    val t = tag
+    String(Array(((t >> 24) & 0xff).toChar, ((t >> 16) & 0xff).toChar, ((t >> 8) & 0xff).toChar, (t & 0xff).toChar))
 
 def errorString(error_code: Int): String = fromCString(FT_Error_String(error_code))

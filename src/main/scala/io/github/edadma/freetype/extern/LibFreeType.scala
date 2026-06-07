@@ -18,6 +18,17 @@ object LibFreeType:
   type FT_Render_Mode = CInt
   type FT_Pos = CLong
   type FT_Vector = CStruct2[FT_Pos, FT_Pos]
+
+  // 16.16 fixed-point — the design-coordinate and axis-range unit of the variation API.
+  type FT_Fixed = CLong
+  // One variation axis: name, minimum / default / maximum design value, the four-byte
+  // OpenType tag (e.g. 'wght'), and the string id of its name.
+  type FT_Var_Axis = CStruct6[CString, FT_Fixed, FT_Fixed, FT_Fixed, FT_ULong, FT_UInt]
+  // A named instance: its per-axis coordinates plus the string ids of its names.
+  type FT_Var_Named_Style = CStruct3[Ptr[FT_Fixed], FT_UInt, FT_UInt]
+  // The variation descriptor of a font: axis/design/named-style counts and the axis and
+  // named-style arrays.
+  type FT_MM_Var = CStruct5[FT_UInt, FT_UInt, FT_UInt, Ptr[FT_Var_Axis], Ptr[FT_Var_Named_Style]]
   type FT_Bitmap = CStruct8[
     /* rows */ CUnsignedInt,
     /* width */ CUnsignedInt,
@@ -47,3 +58,8 @@ object LibFreeType:
   def FT_Render_Glyph(slot: FT_GlyphSlot, render_mode: FT_Render_Mode): FT_Error = extern
   def FT_Get_Char_Index(face: FT_Face, charcode: FT_ULong): FT_UInt = extern
   def FT_Get_Kerning(face: FT_Face, left_glyph: FT_UInt, right_glyph: FT_UInt, kern_mode: FT_UInt, akerning: Ptr[FT_Vector]): FT_Error = extern
+  def FT_Get_MM_Var(face: FT_Face, amaster: Ptr[Ptr[FT_MM_Var]]): FT_Error = extern
+  def FT_Done_MM_Var(library: FT_Library, amaster: Ptr[FT_MM_Var]): FT_Error = extern
+  def FT_Set_Var_Design_Coordinates(face: FT_Face, num_coords: FT_UInt, coords: Ptr[FT_Fixed]): FT_Error = extern
+  def FT_Get_Var_Design_Coordinates(face: FT_Face, num_coords: FT_UInt, coords: Ptr[FT_Fixed]): FT_Error = extern
+  def FT_Set_Named_Instance(face: FT_Face, instance_index: FT_UInt): FT_Error = extern

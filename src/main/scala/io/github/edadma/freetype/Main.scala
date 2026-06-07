@@ -21,3 +21,15 @@ package io.github.edadma.freetype
     end for
 
     println
+
+  // Variation (variable-font) API. KaiseiDecol is a static font, so this exercises the
+  // not-variable path; a variable font would list its axes and ranges here.
+  face.getMMVar match
+    case Right(mm) =>
+      println(s"variable font: ${mm.numAxis} axes")
+      for i <- 0 until mm.numAxis do
+        val a = mm.axis(i)
+        println(f"  ${a.tagString} (${a.name}): ${a.minimum}%.1f .. ${a.default}%.1f .. ${a.maximum}%.1f")
+      library.doneMMVar(mm)
+    case Left(err) =>
+      println(s"not a variable font (FT_Get_MM_Var: ${errorString(err)})")
