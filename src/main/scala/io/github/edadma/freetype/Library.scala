@@ -22,6 +22,24 @@ implicit class Library(val libraryptr: FT_Library) extends AnyVal:
       case 0   => Right(!aface)
       case err => Left(err)
 
+  /** Open a face from a font already in memory rather than from a file — for fonts embedded
+    * in the binary or otherwise held as bytes. `buffer` must stay alive and unchanged for
+    * the whole lifetime of the returned face (FreeType reads from it lazily); `size` is its
+    * length in bytes and `face_index` selects a face within a collection (0 for a plain
+    * font). The buffer is not copied. */
+  def newMemoryFace(buffer: Ptr[Byte], size: Long, face_index: Long): Either[Int, Face] =
+    val aface = stackalloc[FT_Face]()
+
+    FT_New_Memory_Face(
+      libraryptr,
+      buffer,
+      size.toSize.asInstanceOf[FT_Long],
+      face_index.toSize.asInstanceOf[FT_Long],
+      aface,
+    ) match
+      case 0   => Right(!aface)
+      case err => Left(err)
+
 private val FACE_GLYPH = 152
 private val FACE_GLYPH_BITMAP = 152
 

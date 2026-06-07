@@ -7,7 +7,7 @@ ThisBuild / scalaVersion           := "3.7.4"
 ThisBuild / organization           := "io.github.edadma"
 ThisBuild / organizationName       := "edadma"
 ThisBuild / organizationHomepage   := Some(url("https://github.com/edadma"))
-ThisBuild / version                := "0.0.3"
+ThisBuild / version                := "0.0.4"
 ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 
 ThisBuild / publishConfiguration := publishConfiguration.value.withOverwrite(true).withChecksums(Vector.empty)
@@ -54,3 +54,4 @@ publishMavenStyle      := true
 Test / publishArtifact := false
 
 libraryDependencies += "io.github.edadma" %%% "freetype_face" % "0.0.2"
+libraryDependencies += "org.scalatest"    %%% "scalatest"     % "3.2.19" % Test
