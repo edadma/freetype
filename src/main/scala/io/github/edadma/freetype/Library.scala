@@ -14,8 +14,10 @@ def initFreeType: Either[Int, Library] =
     case err => Left(err)
 
 // 16.16 fixed-point conversions for the variation API's design coordinates and axis ranges.
+// FT_Fixed is a C `long` (word-sized here), so a Scala Long is converted through `.toSize`
+// rather than cast directly — a raw `asInstanceOf` from a boxed Long throws at runtime.
 private def fixedToDouble(f: FT_Fixed): Double = f.toLong.toDouble / 65536.0
-private def doubleToFixed(d: Double): FT_Fixed = math.round(d * 65536.0).asInstanceOf[FT_Fixed]
+private def doubleToFixed(d: Double): FT_Fixed = math.round(d * 65536.0).toSize.asInstanceOf[FT_Fixed]
 
 implicit class Library(val libraryptr: FT_Library) extends AnyVal:
   def doneFreeType: Int = FT_Done_FreeType(libraryptr)
