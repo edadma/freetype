@@ -1,6 +1,11 @@
 freetype
 ========
 
+![Maven Central](https://img.shields.io/maven-central/v/io.github.edadma/freetype_native0.5_3)
+![GitHub](https://img.shields.io/github/license/edadma/freetype)
+![Scala Version](https://img.shields.io/badge/Scala-3.7.4-blue.svg)
+![Scala Native Version](https://img.shields.io/badge/Scala_Native-0.5.9-blue.svg)
+
 Scala Native bindings for [FreeType](https://freetype.org/), a freely available software library to render fonts.
 
 Installation
