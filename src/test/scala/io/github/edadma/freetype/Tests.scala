@@ -46,4 +46,29 @@ class Tests extends AnyFreeSpec with Matchers {
     lib.doneFreeType
   }
 
+  "loadSfntTable returns a present table's raw bytes and None for an absent one" in {
+    // Every TrueType font carries a 'head' table of a fixed 54-byte layout whose magic number at
+    // offset 12 is 0x5F0F3CF5. Reading it back exactly pins the whole path: the null-buffer length
+    // probe, the allocation, and the byte-for-byte fill. A made-up tag must report no such table.
+    val lib = initFreeType match
+      case Right(l) => l
+      case Left(e)  => fail(s"FreeType init failed: $e")
+
+    val face = lib.newFace("KaiseiDecol/KaiseiDecol-Regular.ttf", 0) match
+      case Right(f) => f
+      case Left(e)  => fail(s"cannot load font: $e")
+
+    val head = face.loadSfntTable("head")
+    head shouldBe defined
+    head.get.length shouldBe 54
+
+    val magic = head.get.slice(12, 16).map(_ & 0xff)
+    magic shouldBe Array(0x5f, 0x0f, 0x3c, 0xf5)
+
+    face.loadSfntTable("ZZZZ") shouldBe None
+
+    face.doneFace
+    lib.doneFreeType
+  }
+
 }

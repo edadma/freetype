@@ -9,7 +9,7 @@ Installation
 Add the dependency to your `build.sbt`:
 
 ```scala
-libraryDependencies += "io.github.edadma" %%% "freetype" % "0.0.6"
+libraryDependencies += "io.github.edadma" %%% "freetype" % "0.0.7"
 ```
 
 You also need FreeType installed on your system:
@@ -73,6 +73,15 @@ API
 - `Face.bitmap: Bitmap` - Access rendered bitmap
 - `Face.getCharIndex(charcode: Long): Int` - Get glyph index for character
 - `Face.getKerning(left: Char, right: Char, mode: KerningMode): Double` - Get kerning
+- `Face.loadSfntTable(tag: String): Option[Array[Byte]]` - Read a raw SFNT table by its four-character tag (e.g. `"MATH"`, `"GPOS"`), or `None` if absent. FreeType returns the bytes unparsed, so this reaches tables it has no structured API for.
+
+### Variable fonts
+
+- `Face.getMMVar: Either[FT_Error, MMVar]` - The face's variation descriptor (axes + named instances), or `Left` for a static font
+- `Face.setVarDesignCoordinates(coords: Seq[Double]): FT_Error` - Set one design value per axis, in axis order
+- `Face.getVarDesignCoordinates(numAxes: Int): Either[FT_Error, Vector[Double]]` - Read back current design coordinates
+- `Face.setNamedInstance(index: Int): FT_Error` - Select a predefined named instance by index (0 resets to default)
+- `Library.doneMMVar(mmvar: MMVar): Int` - Release a descriptor obtained from `getMMVar`
 
 ### Enums
 

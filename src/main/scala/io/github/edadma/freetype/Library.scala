@@ -19,6 +19,18 @@ def initFreeType: Either[Int, Library] =
 private def fixedToDouble(f: FT_Fixed): Double = f.toLong.toDouble / 65536.0
 private def doubleToFixed(d: Double): FT_Fixed = math.round(d * 65536.0).toSize.asInstanceOf[FT_Fixed]
 
+// Encode a four-character SFNT table name (e.g. "MATH", "head", "OS/2") into the packed big-endian
+// 32-bit tag FreeType identifies tables by. Names are space-padded to four bytes, matching the
+// OpenType convention.
+private def sfntTag(tag: String): FT_ULong =
+  val s = (tag + "    ").substring(0, 4)
+  var t = 0L
+  var i = 0
+  while i < 4 do
+    t = (t << 8) | (s.charAt(i).toLong & 0xffL)
+    i += 1
+  t.toUSize.asInstanceOf[FT_ULong]
+
 implicit class Library(val libraryptr: FT_Library) extends AnyVal:
   def doneFreeType: Int = FT_Done_FreeType(libraryptr)
 
@@ -121,6 +133,35 @@ implicit class Face(val faceptr: FT_Face) extends AnyVal:
   /** Select one of the font's predefined named instances (e.g. "Bold", "Condensed") by index,
     * a shortcut for setting that instance's coordinates. Index 0 resets to the default. */
   def setNamedInstance(index: Int): FT_Error = FT_Set_Named_Instance(faceptr, index.toUInt)
+
+  /** Read a whole SFNT table from the font by its four-character tag (e.g. "MATH", "GPOS", "head"),
+    * returning its raw bytes, or `None` if the face has no such table. FreeType hands the bytes back
+    * verbatim — it does not interpret them — so this is the way to reach tables it has no structured
+    * API for, in particular the OpenType `MATH` table that drives math typesetting. The length is
+    * probed first (a call with a null buffer), then the bytes are read into an allocated buffer. */
+  def loadSfntTable(tag: String): Option[Array[Byte]] =
+    val t    = sfntTag(tag)
+    val lenp = stackalloc[FT_ULong]()
+    !lenp = 0.toUSize.asInstanceOf[FT_ULong]
+
+    if FT_Load_Sfnt_Table(faceptr, t, 0L.toSize.asInstanceOf[FT_Long], null.asInstanceOf[Ptr[Byte]], lenp) != 0 then
+      None
+    else
+      val len = (!lenp).toLong.toInt
+      val out = new Array[Byte](len)
+
+      if len > 0 then
+        Zone {
+          val buf = alloc[Byte](len)
+          !lenp = len.toUSize.asInstanceOf[FT_ULong]
+          FT_Load_Sfnt_Table(faceptr, t, 0L.toSize.asInstanceOf[FT_Long], buf, lenp)
+          var i = 0
+          while i < len do
+            out(i) = buf(i)
+            i += 1
+        }
+
+      Some(out)
 
 implicit class Bitmap(val bitmapptr: Ptr[FT_Bitmap]) extends AnyVal:
   def rows: Int = bitmapptr._1.toInt

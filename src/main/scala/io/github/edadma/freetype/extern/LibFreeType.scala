@@ -63,3 +63,4 @@ object LibFreeType:
   def FT_Set_Var_Design_Coordinates(face: FT_Face, num_coords: FT_UInt, coords: Ptr[FT_Fixed]): FT_Error = extern
   def FT_Get_Var_Design_Coordinates(face: FT_Face, num_coords: FT_UInt, coords: Ptr[FT_Fixed]): FT_Error = extern
   def FT_Set_Named_Instance(face: FT_Face, instance_index: FT_UInt): FT_Error = extern
+  def FT_Load_Sfnt_Table(face: FT_Face, tag: FT_ULong, offset: FT_Long, buffer: Ptr[Byte], length: Ptr[FT_ULong]): FT_Error = extern
